@@ -4,6 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -67,6 +70,22 @@ public class JWTService {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public ResponseEntity<String> validateJwtFromSession(String jwt) {
+        System.out.println("JWT from session: " + jwt);
+
+        // Get the current authenticated user (UserDetails)
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        // Validate the JWT with the UserDetails
+        if (!validateToken(jwt, userDetails)) {
+            System.out.println("JWT validation failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: Invalid or expired token");
+        }
+
+        // Proceed with the valid JWT
+        return ResponseEntity.ok("Authorized");
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
